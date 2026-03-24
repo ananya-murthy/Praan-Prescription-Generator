@@ -83,8 +83,10 @@ body {
   align-items: flex-end;
   gap: 4px;
   flex: 1;
-  max-width: 270px;
+  max-width: 320px;
   margin-left: auto;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .doc-input {
@@ -106,6 +108,8 @@ body {
   font-weight: 600;
   color: #ffffff;
   line-height: 1.4;
+  word-break: break-word;
+  white-space: normal;
 }
 .doc-input.doc-name::placeholder {
   color: rgba(255,255,255,0.55);
@@ -116,6 +120,8 @@ body {
   font-weight: 400;
   color: rgba(255,255,255,0.70);
   line-height: 1.5;
+  word-break: break-word;
+  white-space: normal;
 }
 .doc-input.doc-meta::placeholder {
   color: rgba(255,255,255,0.45);
@@ -483,6 +489,28 @@ body {
       ta.parentNode.replaceChild(div, ta);
     });
 
+    // Convert doctor inputs to divs for capture
+    var docInputs = el.querySelectorAll('.doc-input');
+    var savedDoc = [];
+    docInputs.forEach(function(inp) {
+      savedDoc.push({ el: inp, parent: inp.parentNode });
+      var div = document.createElement('div');
+      var isName = inp.classList.contains('doc-name');
+      div.style.cssText = [
+        'text-align:right',
+        'font-family:DM Sans,sans-serif',
+        'font-size:' + (isName ? '14px' : '11px'),
+        'font-weight:' + (isName ? '600' : '400'),
+        'color:' + (isName ? '#ffffff' : 'rgba(255,255,255,0.70)'),
+        'line-height:' + (isName ? '1.4' : '1.5'),
+        'word-break:break-word',
+        'padding:2px 0 3px',
+        'width:100%'
+      ].join(';');
+      div.textContent = inp.value || '';
+      inp.parentNode.replaceChild(div, inp);
+    });
+
     // Convert patient inputs to inline divs so underline = text width only
     var patInputs = el.querySelectorAll('.pat-input');
     var savedPat = [];
@@ -516,6 +544,12 @@ body {
       windowWidth: el.offsetWidth,
       logging: false
     }).then(function(canvas) {
+      // Restore doctor inputs
+      savedDoc.forEach(function(s) {
+        var div = s.parent.querySelector('div[style]');
+        if (div) s.parent.replaceChild(s.el, div);
+      });
+
       // Restore patient inputs
       savedPat.forEach(function(s) {
         var div = s.parent.querySelector('div[style]');
