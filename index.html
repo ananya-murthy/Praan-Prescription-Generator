@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Praan Health — Prescription</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Instrument+Serif:ital@0;1&family=Playfair+Display:ital@1&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+
+:root {
+  --orange:      #E8622A;
+  --orange-pale: #FDF0E8;
+  --orange-mid:  #F9D9C6;
+  --charcoal:    #272727;
+  --dark:        #1C1C1C;
+  --body:        #3A3A3A;
+  --muted:       #888888;
+  --border:      #E6E0D6;
+  --bg:          #F8F5F1;
+  --white:       #FFFFFF;
+  --red:         #C0392B;
+  --red-pale:    #FEF5F0;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+  color-adjust: exact !important;
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--body);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Page ── */
+.page {
+  width: 210mm;
+  min-height: 297mm;
+  margin: 12px auto 32px;
+  background: var(--white);
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 2px 24px rgba(0,0,0,0.07);
+  overflow: hidden;
+}
+
+/* ── Header ── */
+.header {
+  background: var(--charcoal);
+  padding: 22px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.brand-name {
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-size: 28px;
+  font-weight: 400;
+  color: var(--orange);
+  line-height: 1;
+  letter-spacing: -0.3px;
+}
+.brand-tagline {
+  font-size: 11px;
+  font-weight: 300;
+  color: rgba(255,255,255,0.42);
+  margin-top: 6px;
+}
+
+/* Doctor block */
+.doctor-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex: 1;
+  max-width: 270px;
+  margin-left: auto;
+}
+
+.doc-input {
+  font-family: 'DM Sans', sans-serif;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid transparent;
+  outline: none;
+  text-align: right;
+  padding: 2px 0 3px;
+  width: 100%;
+  display: block;
+  transition: border-bottom-color 0.15s;
+}
+.doc-input:focus { border-bottom-color: rgba(232,98,42,0.6); }
+
+.doc-input.doc-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+  line-height: 1.4;
+}
+.doc-input.doc-name::placeholder {
+  color: rgba(255,255,255,0.55);
+  font-weight: 400;
+}
+.doc-input.doc-meta {
+  font-size: 11px;
+  font-weight: 400;
+  color: rgba(255,255,255,0.70);
+  line-height: 1.5;
+}
+.doc-input.doc-meta::placeholder {
+  color: rgba(255,255,255,0.45);
+  font-weight: 300;
+}
+
+/* Error state for inputs */
+.doc-input.invalid,
+.pat-field.invalid .pat-input,
+.section-content.invalid {
+  border-color: var(--red) !important;
+  background: var(--red-pale) !important;
+}
+.doc-input.invalid { border-bottom-color: #E8622A !important; background: rgba(192,57,43,0.12) !important; }
+
+/* ── Rx accent strip ── */
+.rx-strip {
+  background: var(--orange);
+  padding: 7px 32px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.rx-symbol {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 24px;
+  font-style: italic;
+  color: #fff;
+  line-height: 1;
+}
+.rx-label {
+  font-size: 8px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2.5px;
+  color: rgba(255,255,255,0.70);
+}
+
+/* ── Patient band — with persistent labels ── */
+.patient-band {
+  background: var(--orange-pale);
+  border-bottom: 1px solid var(--orange-mid);
+  padding: 14px 32px 16px;
+  display: grid;
+  grid-template-columns: minmax(0,1.6fr) minmax(0,0.5fr) minmax(0,0.65fr) minmax(0,1.2fr) minmax(0,1.2fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.pat-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+.pat-label {
+  font-size: 8px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.pat-input {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--dark);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--orange-mid);
+  outline: none;
+  padding: 3px 0 6px;
+  width: 100%;
+  display: block;
+  transition: border-bottom-color 0.15s;
+}
+.pat-input::placeholder { color: #c8a898; font-weight: 300; font-size: 11.5px; }
+.pat-input:focus { border-bottom-color: var(--orange); }
+
+/* ── Body ── */
+.body {
+  flex: 1;
+  padding: 20px 32px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.section { break-inside: avoid; }
+
+.section-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 7px;
+  break-after: avoid;
+}
+.section-eyebrow {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--orange);
+  white-space: nowrap;
+}
+.section-rule { flex: 1; height: 1px; background: var(--border); }
+
+.section-content {
+  width: 100%;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12.5px;
+  font-weight: 400;
+  color: var(--dark);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 10px 13px;
+  resize: none;
+  outline: none;
+  line-height: 1.75;
+  transition: border-color 0.15s;
+}
+.section-content:focus { border-color: var(--orange); }
+.section-content::placeholder { color: #c8bdb0; font-weight: 300; }
+.section-content.h-md { min-height: 135px; }
+.section-content.h-lg { min-height: 270px; }
+.section-content.h-inv { min-height: 243px; }
+
+/* ── Footer ── */
+.footer {
+  background: var(--charcoal);
+  padding: 0 32px;
+  display: flex;
+  flex-direction: column;
+}
+.disclaimer {
+  border-left: 3px solid rgba(255,255,255,0.10);
+  padding: 11px 14px;
+  margin: 13px 0;
+}
+.disclaimer-eyebrow {
+  font-size: 8px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: rgba(255,255,255,0.30);
+  margin-bottom: 5px;
+}
+.disclaimer p {
+  font-size: 9.5px;
+  font-weight: 300;
+  color: rgba(255,255,255,0.38);
+  line-height: 1.7;
+}
+.footer-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 0 12px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+.footer-name {
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-size: 12px;
+  color: var(--orange);
+}
+.footer-note {
+  font-size: 9px;
+  font-weight: 300;
+  color: rgba(255,255,255,0.22);
+}
+
+/* ── Print (Cmd+P fallback) ── */
+@media print {
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  @page { size: A4; margin: 0; }
+  [data-noprint] { display: none !important; }
+  body { background: #fff !important; margin: 0 !important; }
+  .page { margin: 0 !important; box-shadow: none !important; width: 210mm !important; }
+}
+
+</style>
+</head>
+<body>
+
+<!-- Toolbar — hidden on print -->
+<div data-noprint style="width:210mm;margin:20px auto 0;display:flex;align-items:center;justify-content:space-between;padding:0 4px;">
+  <div style="display:flex;align-items:center;gap:16px;">
+    <button onclick="clearDoctorCache()" style="background:none;border:none;font-family:'DM Sans',sans-serif;font-size:12px;color:#888;cursor:pointer;padding:0;text-decoration:underline;">Clear doctor details</button>
+    <span id="formStatus" style="font-family:'DM Sans',sans-serif;font-size:12px;color:#C0392B;"></span>
+  </div>
+  <button id="saveBtn" onclick="savePDF()" disabled style="display:inline-flex;align-items:center;gap:8px;padding:10px 22px;background:#aaa;color:#fff;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13.5px;font-weight:600;cursor:not-allowed;opacity:0.5;">
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8M5 7l3 3 3-3"/><path d="M2 12h12"/></svg>
+    Save as PDF
+  </button>
+</div>
+
+<div class="page" id="prescription">
+
+  <!-- Header -->
+  <div class="header" style="background:#272727;">
+    <div class="brand">
+      <div class="brand-name">Praan Health</div>
+      <div class="brand-tagline">Helping you and your parents live longer</div>
+    </div>
+    <div class="doctor-block">
+      <input class="doc-input doc-name" id="d1" type="text"  placeholder="Doctor's Full Name">
+      <input class="doc-input doc-meta" id="d2" type="text"  placeholder="Qualifications">
+      <input class="doc-input doc-meta" id="d3" type="text"  placeholder="Specialization">
+      <input class="doc-input doc-meta" id="d4" type="text"  placeholder="Reg No.">
+      <input class="doc-input doc-meta" id="d5" type="email" placeholder="Praan Email ID">
+    </div>
+  </div>
+
+  <!-- Rx strip -->
+  <div class="rx-strip" style="background:#E8622A;">
+    <span class="rx-symbol">℞</span>
+    <span class="rx-label">Prescription</span>
+  </div>
+
+  <!-- Patient band -->
+  <div class="patient-band" style="background:#FDF0E8;">
+    <div class="pat-field">
+      <span class="pat-label">Member Name</span>
+      <input class="pat-input" id="p1" type="text" placeholder="Full name"      oninput="checkReady()">
+    </div>
+    <div class="pat-field">
+      <span class="pat-label">Age</span>
+      <input class="pat-input" id="p2" type="text" placeholder=""               oninput="checkReady()">
+    </div>
+    <div class="pat-field">
+      <span class="pat-label">Gender</span>
+      <input class="pat-input" id="p3" type="text" placeholder=""               oninput="checkReady()">
+    </div>
+    <div class="pat-field">
+      <span class="pat-label">Care Giver Name</span>
+      <input class="pat-input" id="p4" type="text" placeholder=""               oninput="checkReady()">
+    </div>
+    <div class="pat-field">
+      <span class="pat-label">Consultation Date</span>
+      <input class="pat-input" id="p5" type="date"                              oninput="checkReady()">
+    </div>
+  </div>
+
+  <!-- Body -->
+  <div class="body">
+
+    <div class="section">
+      <div class="section-head">
+        <span class="section-eyebrow">Diagnosis / Chief Complaint</span>
+        <div class="section-rule"></div>
+      </div>
+      <textarea class="section-content h-md" style="background:#F8F5F1;" placeholder="Enter diagnosis or chief complaint..."></textarea>
+    </div>
+
+    <div class="section">
+      <div class="section-head">
+        <span class="section-eyebrow">Medications and Supplements</span>
+        <div class="section-rule"></div>
+      </div>
+      <textarea class="section-content h-lg" style="background:#F8F5F1;" placeholder="List medications and supplements with dose and frequency..."></textarea>
+    </div>
+
+    <div class="section">
+      <div class="section-head">
+        <span class="section-eyebrow">Investigations Advised</span>
+        <div class="section-rule"></div>
+      </div>
+      <textarea class="section-content h-inv" style="background:#F8F5F1;" placeholder="Tests, scans, reports..."></textarea>
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <div class="footer" style="background:#272727;margin-top:auto;">
+    <div class="disclaimer">
+      <div class="disclaimer-eyebrow">Disclaimer</div>
+      <p>This prescription has been issued for teleconsultation purposes only, based on information shared remotely, and does not substitute an in-person clinical examination. If you experience a medical emergency or a sudden worsening of symptoms, please visit the nearest hospital or doctor immediately. Praan Health and the consulting doctor shall not be held liable for any adverse outcomes arising from the use of this prescription without appropriate follow-up care.</p>
+    </div>
+    <div class="footer-bottom">
+      <div class="footer-name">Praan Healthtech Private Limited</div>
+      <div class="footer-note">Computer-generated teleconsultation prescription &nbsp;·&nbsp; praan.health</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  var ALL_REQUIRED = ['d1','d2','d3','d4','d5','p1','p2','p3','p4','p5'];
+  var DOC_FIELDS   = ['d1','d2','d3','d4','d5'];
+
+  // Restore cached doctor details
+  DOC_FIELDS.forEach(function(id) {
+    var saved = localStorage.getItem('praan_doc_' + id);
+    if (saved) document.getElementById(id).value = saved;
+  });
+
+  // Cache on keystroke + recheck
+  DOC_FIELDS.forEach(function(id) {
+    document.getElementById(id).addEventListener('input', function() {
+      localStorage.setItem('praan_doc_' + id, this.value);
+      checkReady();
+    });
+  });
+
+  function checkReady() {
+    var btn    = document.getElementById('saveBtn');
+    var status = document.getElementById('formStatus');
+    var empty  = ALL_REQUIRED.filter(function(id) {
+      return !document.getElementById(id).value.trim();
+    });
+    if (empty.length === 0) {
+      btn.disabled = false;
+      btn.style.background = '#272727';
+      btn.style.cursor     = 'pointer';
+      btn.style.opacity    = '1';
+      status.textContent   = '';
+    } else {
+      btn.disabled = true;
+      btn.style.background = '#aaa';
+      btn.style.cursor     = 'not-allowed';
+      btn.style.opacity    = '0.5';
+      status.textContent   = empty.length + ' required field' + (empty.length > 1 ? 's' : '') + ' missing.';
+    }
+  }
+
+  function clearDoctorCache() {
+    DOC_FIELDS.forEach(function(id) {
+      localStorage.removeItem('praan_doc_' + id);
+      document.getElementById(id).value = '';
+    });
+    checkReady();
+  }
+
+  // Run on load to account for cached doctor fields
+  checkReady();
+
+  function savePDF() {
+    var btn = document.getElementById('saveBtn');
+    btn.textContent = 'Generating...';
+    btn.disabled = true;
+
+    var el = document.getElementById('prescription');
+
+    // Format date before capture
+    var p5 = document.getElementById('p5');
+    var rawDate = p5.value;
+    if (rawDate) {
+      var d = new Date(rawDate + 'T00:00:00');
+      var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      p5.type = 'text';
+      p5.value = d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
+    }
+
+    // Convert textareas to divs so line breaks render
+    var textareas = el.querySelectorAll('textarea.section-content');
+    var savedTA = [];
+    textareas.forEach(function(ta) {
+      savedTA.push({ el: ta, parent: ta.parentNode });
+      var div = document.createElement('div');
+      div.className = ta.className;
+      div.style.cssText = 'white-space:pre-wrap;word-break:break-word;overflow:hidden;background:#F8F5F1;';
+      div.textContent = ta.value || '';
+      ta.parentNode.replaceChild(div, ta);
+    });
+
+    // Convert patient inputs to inline divs so underline = text width only
+    var patInputs = el.querySelectorAll('.pat-input');
+    var savedPat = [];
+    patInputs.forEach(function(inp) {
+      savedPat.push({ el: inp, parent: inp.parentNode });
+      var div = document.createElement('div');
+      // Inline-block so the element is only as wide as its content
+      div.style.cssText = [
+        'display:inline-block',
+        'font-family:DM Sans,sans-serif',
+        'font-size:12.5px',
+        'font-weight:500',
+        'color:#1C1C1C',
+        'padding:3px 0 6px',
+        'border-bottom:1px solid #F9D9C6',
+        'min-width:40px',
+        'max-width:100%',
+        'word-break:break-word'
+      ].join(';');
+      div.textContent = inp.value || '';
+      inp.parentNode.replaceChild(div, inp);
+    });
+
+    html2canvas(el, {
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: '#ffffff',
+      width: el.offsetWidth,
+      height: el.offsetHeight,
+      windowWidth: el.offsetWidth,
+      logging: false
+    }).then(function(canvas) {
+      // Restore patient inputs
+      savedPat.forEach(function(s) {
+        var div = s.parent.querySelector('div[style]');
+        if (div) s.parent.replaceChild(s.el, div);
+      });
+
+      // Restore textareas
+      savedTA.forEach(function(s) {
+        var div = s.parent.querySelector('div.section-content');
+        if (div) s.parent.replaceChild(s.el, div);
+      });
+
+      // Restore date
+      if (rawDate) { p5.type = 'date'; p5.value = rawDate; }
+
+      var imgData = canvas.toDataURL('image/jpeg', 0.97);
+      var jsPDF   = window.jspdf.jsPDF;
+      var pdf     = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+      pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297);
+
+      var memberName = (document.getElementById('p1').value || 'Prescription').trim().replace(/\s+/g,'_');
+      var dateStr    = rawDate || new Date().toISOString().slice(0,10);
+      pdf.save('Praan_Rx_' + memberName + '_' + dateStr + '.pdf');
+
+      btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8M5 7l3 3 3-3"/><path d="M2 12h12"/></svg> Save as PDF';
+      btn.disabled = false;
+    });
+  }
+</script>
+
+</body>
+</html>
