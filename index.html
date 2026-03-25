@@ -4,24 +4,23 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Praan Health — Prescription</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Instrument+Serif:ital@0;1&family=Playfair+Display:ital@1&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Archivo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
 <style>
 
 :root {
-  --orange:      #E8622A;
-  --orange-pale: #FDF0E8;
-  --orange-mid:  #F9D9C6;
-  --charcoal:    #272727;
-  --dark:        #1C1C1C;
-  --body:        #3A3A3A;
-  --muted:       #888888;
-  --border:      #E6E0D6;
-  --bg:          #F8F5F1;
+  --orange:      #FD7118;
+  --orange-pale: #F6E9E0;
+  --orange-mid:  #EDD5C5;
+  --blue:        #303880;
+  --dark:        #1A1A1A;
+  --muted:       #737373;
+  --border:      #E8E0D8;
+  --bg:          #F6E9E0;
   --white:       #FFFFFF;
-  --red:         #C0392B;
-  --red-pale:    #FEF5F0;
+  --red:         #BC4326;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -33,11 +32,35 @@ html {
 }
 
 body {
-  font-family: 'DM Sans', sans-serif;
-  background: var(--bg);
-  color: var(--body);
+  font-family: 'Archivo', sans-serif;
+  background: #EDE0D4;
+  color: var(--dark);
   -webkit-font-smoothing: antialiased;
 }
+
+/* ── Toolbar ── */
+.toolbar {
+  width: 210mm;
+  margin: 20px auto 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px;
+}
+.toolbar-left { display: flex; align-items: center; gap: 16px; }
+#formStatus { font-family: 'Archivo', sans-serif; font-size: 12px; color: var(--red); }
+.btn-clear { background: none; border: none; font-family: 'Archivo', sans-serif; font-size: 12px; color: var(--muted); cursor: pointer; padding: 0; text-decoration: underline; }
+.btn-save {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 24px;
+  background: var(--blue); color: #fff;
+  border: none; border-radius: 12px;
+  font-family: 'Archivo', sans-serif; font-size: 13px; font-weight: 600;
+  cursor: not-allowed; opacity: 0.4;
+  transition: background 0.15s, opacity 0.15s;
+}
+.btn-save.ready { opacity: 1; cursor: pointer; background: var(--orange); }
+.btn-save.ready:hover { background: #e5620f; }
 
 /* ── Page ── */
 .page {
@@ -47,274 +70,251 @@ body {
   background: var(--white);
   display: flex;
   flex-direction: column;
-  box-shadow: 0 2px 24px rgba(0,0,0,0.07);
+  box-shadow: 0 4px 40px rgba(0,0,0,0.12);
   overflow: hidden;
+  border-radius: 16px;
 }
 
 /* ── Header ── */
 .header {
-  background: var(--charcoal);
-  padding: 22px 32px;
+  background: var(--orange);
+  padding: 20px 32px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 24px;
 }
-
 .brand-name {
-  font-family: 'Instrument Serif', Georgia, serif;
-  font-size: 28px;
-  font-weight: 400;
-  color: var(--orange);
-  line-height: 1;
-  letter-spacing: -0.3px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 26px; font-weight: 700;
+  color: #fff; line-height: 1; letter-spacing: -0.3px;
 }
 .brand-tagline {
-  font-size: 11px;
-  font-weight: 300;
-  color: rgba(255,255,255,0.42);
-  margin-top: 6px;
+  font-family: 'Archivo', sans-serif;
+  font-size: 11px; font-weight: 300;
+  color: rgba(255,255,255,0.65); margin-top: 5px;
 }
-
-/* Doctor block */
 .doctor-block {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 4px;
-  flex: 1;
-  max-width: 320px;
-  margin-left: auto;
-  word-break: break-word;
-  overflow-wrap: break-word;
+  display: flex; flex-direction: column;
+  align-items: flex-end; gap: 3px;
+  flex: 1; max-width: 300px; margin-left: auto;
 }
-
 .doc-input {
-  font-family: 'DM Sans', sans-serif;
-  background: transparent;
-  border: none;
-  border-bottom: 1px solid transparent;
-  outline: none;
-  text-align: right;
-  padding: 2px 0 3px;
-  width: 100%;
-  display: block;
-  transition: border-bottom-color 0.15s;
+  font-family: 'Archivo', sans-serif;
+  background: transparent; border: none;
+  outline: none; text-align: right;
+  padding: 1px 0 2px; width: 100%; display: block;
 }
-.doc-input:focus { border-bottom-color: rgba(232,98,42,0.6); }
-
+.doc-input:focus { border-bottom: 1px solid rgba(255,255,255,0.40); }
 .doc-input.doc-name {
-  font-size: 14px;
-  font-weight: 600;
-  color: #ffffff;
+  font-size: 13.5px; font-weight: 400;
+  color: #ffffff !important; -webkit-text-fill-color: #ffffff;
   line-height: 1.4;
-  word-break: break-word;
-  white-space: normal;
 }
-.doc-input.doc-name::placeholder {
-  color: rgba(255,255,255,0.55);
-  font-weight: 400;
-}
+.doc-input.doc-name:not(:placeholder-shown) { font-weight: 700; }
+.doc-input.doc-name::placeholder { color: rgba(255,255,255,0.70) !important; -webkit-text-fill-color: rgba(255,255,255,0.70); }
 .doc-input.doc-meta {
-  font-size: 11px;
-  font-weight: 400;
-  color: rgba(255,255,255,0.70);
+  font-size: 10.5px; font-weight: 300;
+  color: rgba(255,255,255,0.90) !important; -webkit-text-fill-color: rgba(255,255,255,0.90);
   line-height: 1.5;
-  word-break: break-word;
-  white-space: normal;
 }
-.doc-input.doc-meta::placeholder {
-  color: rgba(255,255,255,0.45);
-  font-weight: 300;
-}
+.doc-input.doc-meta:not(:placeholder-shown) { font-weight: 600; -webkit-text-fill-color: #ffffff; }
+.doc-input.doc-meta::placeholder { color: rgba(255,255,255,0.60) !important; -webkit-text-fill-color: rgba(255,255,255,0.60); }
 
-/* Error state for inputs */
-.doc-input.invalid,
-.pat-field.invalid .pat-input,
-.section-content.invalid {
-  border-color: var(--red) !important;
-  background: var(--red-pale) !important;
-}
-.doc-input.invalid { border-bottom-color: #E8622A !important; background: rgba(192,57,43,0.12) !important; }
-
-/* ── Rx accent strip ── */
-.rx-strip {
-  background: var(--orange);
-  padding: 7px 32px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.rx-symbol {
-  font-family: 'Playfair Display', Georgia, serif;
-  font-size: 24px;
-  font-style: italic;
-  color: #fff;
-  line-height: 1;
-}
-.rx-label {
-  font-size: 8px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 2.5px;
-  color: rgba(255,255,255,0.70);
-}
-
-/* ── Patient band — with persistent labels ── */
-.patient-band {
-  background: var(--orange-pale);
-  border-bottom: 1px solid var(--orange-mid);
-  padding: 14px 32px 16px;
+/* ── Member band ── */
+.member-band {
+  padding: 14px 32px 12px;
   display: grid;
   grid-template-columns: minmax(0,1.6fr) minmax(0,0.5fr) minmax(0,0.65fr) minmax(0,1.2fr) minmax(0,1.2fr);
   gap: 16px;
-  align-items: start;
+  border-bottom: 1.5px solid var(--border);
+  background: #fff;
 }
+.mem-field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.mem-label {
+  font-size: 7.5px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 1.2px;
+  color: var(--orange);
+}
+.mem-input {
+  font-family: 'Archivo', sans-serif;
+  font-size: 12.5px; font-weight: 400;
+  color: var(--dark); background: transparent;
+  border: none; border-bottom: 1px solid var(--border);
+  outline: none; padding: 2px 0 5px; width: 100%;
+  height: 28px; line-height: 1;
+  transition: border-color 0.15s;
+}
+.mem-input:not(:placeholder-shown) { font-weight: 700; color: var(--dark); }
+.mem-input::placeholder { color: #C8B8A8; font-weight: 300; font-size: 11px; }
+.mem-input:focus { border-bottom-color: var(--orange); }
 
-.pat-field {
+/* Date input — show calendar, match font to other fields */
+.mem-input[type="date"] { display: none; }
+
+/* ── Divider with Rx label ── */
+.rx-row {
   display: flex;
-  flex-direction: column;
-  gap: 5px;
-  min-width: 0;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 32px 0;
 }
-.pat-label {
-  font-size: 8px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: var(--muted);
-  white-space: nowrap;
+.rx-sym {
+  font-size: 18px; font-weight: 800; font-style: italic;
+  color: var(--orange); line-height: 1; flex-shrink: 0;
 }
-.pat-input {
-  font-family: 'DM Sans', sans-serif;
-  font-size: 12.5px;
-  font-weight: 500;
-  color: var(--dark);
-  background: transparent;
-  border: none;
-  border-bottom: 1px solid var(--orange-mid);
-  outline: none;
-  padding: 3px 0 6px;
-  width: 100%;
-  display: block;
-  transition: border-bottom-color 0.15s;
+.rx-lbl {
+  font-size: 7.5px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 2.5px;
+  color: var(--blue);
 }
-.pat-input::placeholder { color: #c8a898; font-weight: 300; font-size: 11.5px; }
-.pat-input:focus { border-bottom-color: var(--orange); }
+.rx-rule { flex: 1; height: 1.5px; background: var(--orange); border-radius: 2px; }
 
 /* ── Body ── */
 .body {
-  flex: 1;
-  padding: 20px 32px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
+  flex: 1; padding: 14px 32px 20px;
+  display: flex; flex-direction: column; gap: 14px;
 }
-
 .section { break-inside: avoid; }
-
 .section-head {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 7px;
-  break-after: avoid;
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 6px; break-after: avoid;
 }
 .section-eyebrow {
-  font-size: 9px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  color: var(--orange);
-  white-space: nowrap;
+  font-family: 'Archivo', sans-serif;
+  font-size: 8px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 2px;
+  color: var(--blue); white-space: nowrap;
 }
 .section-rule { flex: 1; height: 1px; background: var(--border); }
-
 .section-content {
   width: 100%;
-  font-family: 'DM Sans', sans-serif;
-  font-size: 12.5px;
-  font-weight: 400;
-  color: var(--dark);
-  background: var(--bg);
+  font-family: 'Archivo', sans-serif;
+  font-size: 12.5px; font-weight: 400;
+  color: var(--dark); background: #fff;
   border: 1px solid var(--border);
-  border-radius: 7px;
-  padding: 10px 13px;
-  resize: none;
-  outline: none;
-  line-height: 1.75;
+  border-radius: 10px;
+  padding: 11px 14px;
+  resize: none; outline: none; line-height: 1.8;
   transition: border-color 0.15s;
 }
 .section-content:focus { border-color: var(--orange); }
-.section-content::placeholder { color: #c8bdb0; font-weight: 300; }
-.section-content.h-md { min-height: 135px; }
-.section-content.h-lg { min-height: 270px; }
+.section-content::placeholder { color: #C8B8A8; font-weight: 300; }
+.section-content.h-md  { min-height: 135px; }
+.section-content.h-lg  { min-height: 270px; }
 .section-content.h-inv { min-height: 243px; }
 
 /* ── Footer ── */
 .footer {
-  background: var(--charcoal);
-  padding: 0 32px;
-  display: flex;
-  flex-direction: column;
-}
-.disclaimer {
-  border-left: 3px solid rgba(255,255,255,0.10);
-  padding: 11px 14px;
-  margin: 13px 0;
-}
-.disclaimer-eyebrow {
-  font-size: 8px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
-  color: rgba(255,255,255,0.30);
-  margin-bottom: 5px;
-}
-.disclaimer p {
-  font-size: 9.5px;
-  font-weight: 300;
-  color: rgba(255,255,255,0.38);
-  line-height: 1.7;
-}
-.footer-bottom {
-  display: flex;
-  align-items: center;
+  background: var(--blue);
+  padding: 12px 32px;
+  display: flex; align-items: center;
   justify-content: space-between;
-  padding: 9px 0 12px;
-  border-top: 1px solid rgba(255,255,255,0.08);
 }
 .footer-name {
-  font-family: 'Instrument Serif', Georgia, serif;
-  font-size: 12px;
-  color: var(--orange);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 11px; font-weight: 700; color: #fff;
 }
-.footer-note {
-  font-size: 9px;
-  font-weight: 300;
-  color: rgba(255,255,255,0.22);
+.footer-right { text-align: right; }
+.footer-note { font-size: 8px; color: rgba(255,255,255,0.40); }
+.footer-url  { font-size: 9px; color: rgba(255,255,255,0.55); margin-top: 1px; }
+
+/* ── Disclaimer ── */
+.disclaimer-row {
+  padding: 0 32px 10px;
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+}
+.disclaimer-text {
+  font-size: 8px; font-weight: 300;
+  color: var(--muted); line-height: 1.7;
+}
+.disclaimer-eyebrow {
+  font-size: 7px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 1.5px;
+  color: #bbb; margin-bottom: 3px;
 }
 
-/* ── Print (Cmd+P fallback) ── */
+/* ── Auth gate ── */
+#auth-gate {
+  position: fixed; inset: 0;
+  background: var(--blue);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000;
+}
+#auth-gate.hidden { display: none; }
+.auth-card {
+  background: var(--orange-pale);
+  border-radius: 20px; padding: 40px;
+  width: 100%; max-width: 400px; text-align: center;
+}
+.auth-brand { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 22px; font-weight: 700; color: var(--orange); margin-bottom: 4px; }
+.auth-tagline { font-family: 'Archivo', sans-serif; font-size: 12px; color: var(--muted); font-weight: 300; margin-bottom: 28px; }
+.auth-title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 20px; font-weight: 700; color: var(--dark); margin-bottom: 8px; }
+.auth-sub { font-family: 'Archivo', sans-serif; font-size: 13px; color: var(--muted); margin-bottom: 28px; line-height: 1.6; }
+.auth-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  width: 100%; padding: 13px 20px;
+  background: var(--blue); color: #fff;
+  border: none; border-radius: 12px;
+  font-family: 'Archivo', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer;
+}
+.auth-btn:hover { background: #252d6b; }
+.auth-error { margin-top: 16px; font-size: 12.5px; font-family: 'Archivo', sans-serif; color: var(--red); }
+.auth-user-bar {
+  position: fixed; top: 0; left: 0; right: 0;
+  background: var(--blue); display: none;
+  align-items: center; justify-content: space-between;
+  padding: 10px 24px; z-index: 500; font-family: 'Archivo', sans-serif;
+}
+.auth-user-bar.visible { display: flex; }
+.auth-user-name { font-size: 13px; color: rgba(255,255,255,0.65); }
+.auth-logout { font-size: 12px; color: rgba(255,255,255,0.45); background: none; border: none; cursor: pointer; text-decoration: underline; font-family: 'Archivo', sans-serif; }
+body.authed { padding-top: 40px; }
+
+/* ── Print ── */
 @media print {
   * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
   @page { size: A4; margin: 0; }
   [data-noprint] { display: none !important; }
   body { background: #fff !important; margin: 0 !important; }
-  .page { margin: 0 !important; box-shadow: none !important; width: 210mm !important; }
+  .page { margin: 0 !important; box-shadow: none !important; width: 210mm !important; border-radius: 0 !important; }
+  .header { background: #FD7118 !important; }
+  .footer { background: #303880 !important; }
 }
 
 </style>
 </head>
 <body>
 
-<!-- Toolbar — hidden on print -->
-<div data-noprint style="width:210mm;margin:20px auto 0;display:flex;align-items:center;justify-content:space-between;padding:0 4px;">
-  <div style="display:flex;align-items:center;gap:16px;">
-    <button onclick="clearDoctorCache()" style="background:none;border:none;font-family:'DM Sans',sans-serif;font-size:12px;color:#888;cursor:pointer;padding:0;text-decoration:underline;">Clear doctor details</button>
-    <span id="formStatus" style="font-family:'DM Sans',sans-serif;font-size:12px;color:#C0392B;"></span>
+<!-- Auth gate -->
+<div id="auth-gate">
+  <div class="auth-card">
+    <div class="auth-brand">Praan Health</div>
+    <div class="auth-tagline">Helping you and your parents live longer</div>
+    <div class="auth-title">Sign in to continue</div>
+    <div class="auth-sub">Access is restricted to Praan Health team members. Sign in with your @praan.health Google account.</div>
+    <button class="auth-btn" onclick="if(typeof netlifyIdentity!=='undefined')netlifyIdentity.open('login')">
+      <svg width="16" height="16" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.2C12.43 13.21 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.2C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-3.71-13.46-9.08l-7.97 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+      Continue with Google
+    </button>
+    <div class="auth-error" id="auth-error"></div>
   </div>
-  <button id="saveBtn" onclick="savePDF()" disabled style="display:inline-flex;align-items:center;gap:8px;padding:10px 22px;background:#aaa;color:#fff;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13.5px;font-weight:600;cursor:not-allowed;opacity:0.5;">
+</div>
+
+<!-- User bar -->
+<div class="auth-user-bar" id="user-bar">
+  <span class="auth-user-name" id="user-email"></span>
+  <button class="auth-logout" onclick="logout()">Sign out</button>
+</div>
+
+<!-- Toolbar -->
+<div data-noprint class="toolbar">
+  <div class="toolbar-left">
+    <button class="btn-clear" onclick="clearDoctorCache()">Clear doctor details</button>
+    <span id="formStatus"></span>
+  </div>
+  <button class="btn-save" id="saveBtn" onclick="savePDF()" disabled>
     <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8M5 7l3 3 3-3"/><path d="M2 12h12"/></svg>
     Save as PDF
   </button>
@@ -323,48 +323,57 @@ body {
 <div class="page" id="prescription">
 
   <!-- Header -->
-  <div class="header" style="background:#272727;">
-    <div class="brand">
+  <div class="header" style="background:#FD7118;">
+    <div>
       <div class="brand-name">Praan Health</div>
       <div class="brand-tagline">Helping you and your parents live longer</div>
     </div>
     <div class="doctor-block">
-      <input class="doc-input doc-name" id="d1" type="text"  placeholder="Doctor's Full Name">
-      <input class="doc-input doc-meta" id="d2" type="text"  placeholder="Qualifications">
-      <input class="doc-input doc-meta" id="d3" type="text"  placeholder="Specialization">
-      <input class="doc-input doc-meta" id="d4" type="text"  placeholder="Reg No.">
+      <input class="doc-input doc-name" id="d1" type="text" placeholder="Doctor's Full Name">
+      <input class="doc-input doc-meta" id="d2" type="text" placeholder="Qualifications">
+      <input class="doc-input doc-meta" id="d3" type="text" placeholder="Specialization">
+      <input class="doc-input doc-meta" id="d4" type="text" placeholder="Reg No.">
       <input class="doc-input doc-meta" id="d5" type="email" placeholder="Praan Email ID">
     </div>
   </div>
 
-  <!-- Rx strip -->
-  <div class="rx-strip" style="background:#E8622A;">
-    <span class="rx-symbol">℞</span>
-    <span class="rx-label">Prescription</span>
+  <!-- Member band -->
+  <div class="member-band">
+    <div class="mem-field">
+      <span class="mem-label">Member Name</span>
+      <input class="mem-input" id="p1" type="text" placeholder="Full name" oninput="checkReady()">
+    </div>
+    <div class="mem-field">
+      <span class="mem-label">Age</span>
+      <input class="mem-input" id="p2" type="text" placeholder="In Years" oninput="checkReady()">
+    </div>
+    <div class="mem-field">
+      <span class="mem-label">Gender</span>
+      <input class="mem-input" id="p3" type="text" placeholder="M / F" oninput="checkReady()">
+    </div>
+    <div class="mem-field">
+      <span class="mem-label">Care Giver Name</span>
+      <input class="mem-input" id="p4" type="text" placeholder="Full name" oninput="checkReady()">
+    </div>
+    <div class="mem-field">
+      <span class="mem-label">Consultation Date</span>
+      <div style="position:relative;display:flex;align-items:center;">
+        <input class="mem-input" id="p5-display" type="text" placeholder="dd / mm / yyyy" readonly
+          style="cursor:pointer;flex:1;"
+          onclick="document.getElementById('p5').focus();document.getElementById('p5').click();">
+        <input id="p5" type="date"
+          style="position:absolute;right:0;top:0;width:24px;height:28px;opacity:0;cursor:pointer;border:none;outline:none;"
+          onchange="syncDate()" oninput="syncDate()">
+        <svg onclick="document.getElementById('p5').click();" style="width:14px;height:14px;flex-shrink:0;cursor:pointer;color:#C8B8A8;margin-left:4px;" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>
+      </div>
+    </div>
   </div>
 
-  <!-- Patient band -->
-  <div class="patient-band" style="background:#FDF0E8;">
-    <div class="pat-field">
-      <span class="pat-label">Member Name</span>
-      <input class="pat-input" id="p1" type="text" placeholder="Full name"      oninput="checkReady()">
-    </div>
-    <div class="pat-field">
-      <span class="pat-label">Age</span>
-      <input class="pat-input" id="p2" type="text" placeholder=""               oninput="checkReady()">
-    </div>
-    <div class="pat-field">
-      <span class="pat-label">Gender</span>
-      <input class="pat-input" id="p3" type="text" placeholder=""               oninput="checkReady()">
-    </div>
-    <div class="pat-field">
-      <span class="pat-label">Care Giver Name</span>
-      <input class="pat-input" id="p4" type="text" placeholder=""               oninput="checkReady()">
-    </div>
-    <div class="pat-field">
-      <span class="pat-label">Consultation Date</span>
-      <input class="pat-input" id="p5" type="date"                              oninput="checkReady()">
-    </div>
+  <!-- Rx label row -->
+  <div class="rx-row">
+    <span class="rx-sym">℞</span>
+    <span class="rx-lbl">Prescription</span>
+    <div class="rx-rule"></div>
   </div>
 
   <!-- Body -->
@@ -375,7 +384,7 @@ body {
         <span class="section-eyebrow">Diagnosis / Chief Complaint</span>
         <div class="section-rule"></div>
       </div>
-      <textarea class="section-content h-md" style="background:#F8F5F1;" placeholder="Enter diagnosis or chief complaint..."></textarea>
+      <textarea class="section-content h-md" style="background:#fff;" placeholder="Enter diagnosis or chief complaint..."></textarea>
     </div>
 
     <div class="section">
@@ -383,7 +392,7 @@ body {
         <span class="section-eyebrow">Medications and Supplements</span>
         <div class="section-rule"></div>
       </div>
-      <textarea class="section-content h-lg" style="background:#F8F5F1;" placeholder="List medications and supplements with dose and frequency..."></textarea>
+      <textarea class="section-content h-lg" style="background:#fff;" placeholder="List medications and supplements with dose and frequency..."></textarea>
     </div>
 
     <div class="section">
@@ -391,37 +400,80 @@ body {
         <span class="section-eyebrow">Investigations Advised</span>
         <div class="section-rule"></div>
       </div>
-      <textarea class="section-content h-inv" style="background:#F8F5F1;" placeholder="Tests, scans, reports..."></textarea>
+      <textarea class="section-content h-inv" style="background:#fff;" placeholder="Tests, scans, reports..."></textarea>
     </div>
 
   </div>
 
+  <!-- Disclaimer -->
+  <div class="disclaimer-row">
+    <div class="disclaimer-eyebrow">Disclaimer</div>
+    <p class="disclaimer-text">This prescription has been issued for teleconsultation purposes only, based on information shared remotely, and does not substitute an in-person clinical examination. If you experience a medical emergency or a sudden worsening of symptoms, please visit the nearest hospital or doctor immediately. Praan Health and the consulting doctor shall not be held liable for any adverse outcomes arising from the use of this prescription without appropriate follow-up care.</p>
+  </div>
+
   <!-- Footer -->
-  <div class="footer" style="background:#272727;margin-top:auto;">
-    <div class="disclaimer">
-      <div class="disclaimer-eyebrow">Disclaimer</div>
-      <p>This prescription has been issued for teleconsultation purposes only, based on information shared remotely, and does not substitute an in-person clinical examination. If you experience a medical emergency or a sudden worsening of symptoms, please visit the nearest hospital or doctor immediately. Praan Health and the consulting doctor shall not be held liable for any adverse outcomes arising from the use of this prescription without appropriate follow-up care.</p>
-    </div>
-    <div class="footer-bottom">
-      <div class="footer-name">Praan Healthtech Private Limited</div>
-      <div class="footer-note">Computer-generated teleconsultation prescription &nbsp;·&nbsp; praan.health</div>
+  <div class="footer" style="background:#303880;">
+    <div class="footer-name">Praan Healthtech Private Limited</div>
+    <div class="footer-right">
+      <div class="footer-note">Computer-generated teleconsultation prescription</div>
+      <div class="footer-url">praan.health</div>
     </div>
   </div>
 
 </div>
 
 <script>
-  var ALL_REQUIRED = ['d1','d2','d3','d4','d5','p1','p2','p3','p4','p5'];
-  var DOC_FIELDS   = ['d1','d2','d3','d4','d5'];
+  function syncDate() {
+    var raw = document.getElementById('p5').value;
+    var display = document.getElementById('p5-display');
+    if (raw) {
+      var d = new Date(raw + 'T00:00:00');
+      var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      display.value = d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
+    } else {
+      display.value = '';
+    }
+    checkReady();
+  }
 
-  // Restore cached doctor details
+  var ALL_REQUIRED = ['d1','d2','d3','d4','d5','p1','p2','p3','p4','p5-display'];
+  var DOC_FIELDS   = ['d1','d2','d3','d4','d5'];
+  var ALLOWED_DOMAIN = 'praan.health';
+
+  // Auth
+  if (typeof netlifyIdentity !== 'undefined') {
+    netlifyIdentity.on('init', function(user) { if (user) handleLogin(user); });
+    netlifyIdentity.on('login', function(user) { netlifyIdentity.close(); handleLogin(user); });
+    netlifyIdentity.on('logout', function() {
+      document.getElementById('auth-gate').classList.remove('hidden');
+      document.getElementById('user-bar').classList.remove('visible');
+      document.body.classList.remove('authed');
+    });
+  } else {
+    document.getElementById('auth-gate').classList.add('hidden');
+  }
+
+  function handleLogin(user) {
+    var email = user.email || '';
+    var domain = email.split('@')[1] || '';
+    if (domain !== ALLOWED_DOMAIN) {
+      netlifyIdentity.logout();
+      var e = document.getElementById('auth-error');
+      e.style.display = 'block';
+      e.textContent = 'Access restricted to @' + ALLOWED_DOMAIN + ' accounts.';
+      return;
+    }
+    document.getElementById('auth-gate').classList.add('hidden');
+    document.getElementById('user-bar').classList.add('visible');
+    document.getElementById('user-email').textContent = email;
+    document.body.classList.add('authed');
+  }
+  function logout() { if (typeof netlifyIdentity !== 'undefined') netlifyIdentity.logout(); }
+
+  // Doctor cache
   DOC_FIELDS.forEach(function(id) {
     var saved = localStorage.getItem('praan_doc_' + id);
     if (saved) document.getElementById(id).value = saved;
-  });
-
-  // Cache on keystroke + recheck
-  DOC_FIELDS.forEach(function(id) {
     document.getElementById(id).addEventListener('input', function() {
       localStorage.setItem('praan_doc_' + id, this.value);
       checkReady();
@@ -429,23 +481,17 @@ body {
   });
 
   function checkReady() {
-    var btn    = document.getElementById('saveBtn');
+    var btn = document.getElementById('saveBtn');
     var status = document.getElementById('formStatus');
-    var empty  = ALL_REQUIRED.filter(function(id) {
+    var empty = ALL_REQUIRED.filter(function(id) {
       return !document.getElementById(id).value.trim();
     });
     if (empty.length === 0) {
-      btn.disabled = false;
-      btn.style.background = '#272727';
-      btn.style.cursor     = 'pointer';
-      btn.style.opacity    = '1';
-      status.textContent   = '';
+      btn.disabled = false; btn.classList.add('ready');
+      status.textContent = '';
     } else {
-      btn.disabled = true;
-      btn.style.background = '#aaa';
-      btn.style.cursor     = 'not-allowed';
-      btn.style.opacity    = '0.5';
-      status.textContent   = empty.length + ' required field' + (empty.length > 1 ? 's' : '') + ' missing.';
+      btn.disabled = true; btn.classList.remove('ready');
+      status.textContent = empty.length + ' required field' + (empty.length > 1 ? 's' : '') + ' missing.';
     }
   }
 
@@ -457,39 +503,16 @@ body {
     checkReady();
   }
 
-  // Run on load to account for cached doctor fields
-  checkReady();
-
   function savePDF() {
     var btn = document.getElementById('saveBtn');
-    btn.textContent = 'Generating...';
-    btn.disabled = true;
-
+    btn.textContent = 'Generating...'; btn.disabled = true;
     var el = document.getElementById('prescription');
 
-    // Format date before capture
-    var p5 = document.getElementById('p5');
-    var rawDate = p5.value;
-    if (rawDate) {
-      var d = new Date(rawDate + 'T00:00:00');
-      var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-      p5.type = 'text';
-      p5.value = d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
-    }
+    // Date already formatted in p5-display — just grab raw for filename
+    var rawDate = document.getElementById('p5').value;
+    var p5display = document.getElementById('p5-display');
 
-    // Convert textareas to divs so line breaks render
-    var textareas = el.querySelectorAll('textarea.section-content');
-    var savedTA = [];
-    textareas.forEach(function(ta) {
-      savedTA.push({ el: ta, parent: ta.parentNode });
-      var div = document.createElement('div');
-      div.className = ta.className;
-      div.style.cssText = 'white-space:pre-wrap;word-break:break-word;overflow:hidden;background:#F8F5F1;';
-      div.textContent = ta.value || '';
-      ta.parentNode.replaceChild(div, ta);
-    });
-
-    // Convert doctor inputs to divs for capture
+    // Convert doctor inputs to divs
     var docInputs = el.querySelectorAll('.doc-input');
     var savedDoc = [];
     docInputs.forEach(function(inp) {
@@ -497,87 +520,83 @@ body {
       var div = document.createElement('div');
       var isName = inp.classList.contains('doc-name');
       div.style.cssText = [
-        'text-align:right',
-        'font-family:DM Sans,sans-serif',
-        'font-size:' + (isName ? '14px' : '11px'),
-        'font-weight:' + (isName ? '600' : '400'),
-        'color:' + (isName ? '#ffffff' : 'rgba(255,255,255,0.70)'),
-        'line-height:' + (isName ? '1.4' : '1.5'),
-        'word-break:break-word',
-        'padding:2px 0 3px',
-        'width:100%'
+        'text-align:right', 'font-family:Archivo,sans-serif',
+        'font-size:' + (isName ? '13.5px' : '10.5px'),
+        'font-weight:' + (isName ? '700' : '600'),
+        'color:#ffffff', 'line-height:' + (isName ? '1.4' : '1.5'),
+        'word-break:break-word', 'padding:1px 0 2px', 'width:100%'
       ].join(';');
       div.textContent = inp.value || '';
       inp.parentNode.replaceChild(div, inp);
     });
 
-    // Convert patient inputs to inline divs so underline = text width only
-    var patInputs = el.querySelectorAll('.pat-input');
-    var savedPat = [];
-    patInputs.forEach(function(inp) {
-      savedPat.push({ el: inp, parent: inp.parentNode });
+    // Convert member inputs to inline divs (includes p5-display)
+    var memInputs = el.querySelectorAll('.mem-input, #p5-display');
+    var savedMem = [];
+    var seen = [];
+    memInputs.forEach(function(inp) {
+      if (seen.indexOf(inp) > -1) return;
+      seen.push(inp);
+      savedMem.push({ el: inp, parent: inp.parentNode });
       var div = document.createElement('div');
-      // Inline-block so the element is only as wide as its content
       div.style.cssText = [
-        'display:inline-block',
-        'font-family:DM Sans,sans-serif',
-        'font-size:12.5px',
-        'font-weight:500',
-        'color:#1C1C1C',
-        'padding:3px 0 6px',
-        'border-bottom:1px solid #F9D9C6',
-        'min-width:40px',
-        'max-width:100%',
-        'word-break:break-word'
+        'display:inline-block', 'font-family:Archivo,sans-serif',
+        'font-size:12.5px', 'font-weight:700', 'color:#1A1A1A',
+        'padding:2px 0 5px', 'border-bottom:1px solid #E8E0D8',
+        'min-width:30px', 'max-width:100%', 'word-break:break-word'
       ].join(';');
       div.textContent = inp.value || '';
       inp.parentNode.replaceChild(div, inp);
     });
+    // Also hide the raw date input during capture
+    var rawDateInput = document.getElementById('p5');
+    var rawDateParent = rawDateInput.parentNode;
+    rawDateParent.removeChild(rawDateInput);
+
+    // Convert textareas to divs
+    var textareas = el.querySelectorAll('textarea.section-content');
+    var savedTA = [];
+    textareas.forEach(function(ta) {
+      savedTA.push({ el: ta, parent: ta.parentNode });
+      var div = document.createElement('div');
+      div.className = ta.className;
+      div.style.cssText = 'white-space:pre-wrap;word-break:break-word;overflow:hidden;background:#fff;border:1px solid #E8E0D8;border-radius:10px;padding:11px 14px;';
+      div.textContent = ta.value || '';
+      ta.parentNode.replaceChild(div, ta);
+    });
+
+    var memberName = (document.getElementById('p1').value || 'Prescription').trim().replace(/\s+/g,'_');
+    var filename = 'Praan_Rx_' + memberName + '_' + rawDate + '.pdf';
 
     html2canvas(el, {
-      scale: 2,
-      useCORS: true,
-      allowTaint: true,
+      scale: 2, useCORS: true, allowTaint: true,
       backgroundColor: '#ffffff',
-      width: el.offsetWidth,
-      height: el.offsetHeight,
-      windowWidth: el.offsetWidth,
-      logging: false
+      width: el.offsetWidth, height: el.offsetHeight,
+      windowWidth: el.offsetWidth, logging: false
     }).then(function(canvas) {
-      // Restore doctor inputs
-      savedDoc.forEach(function(s) {
-        var div = s.parent.querySelector('div[style]');
-        if (div) s.parent.replaceChild(s.el, div);
+      // Restore raw date input
+      rawDateParent.appendChild(rawDateInput);
+      // Restore member inputs
+      savedMem.forEach(function(s) {
+        var d = s.parent.querySelector('div[style]');
+        if (d) s.parent.replaceChild(s.el, d);
       });
-
-      // Restore patient inputs
-      savedPat.forEach(function(s) {
-        var div = s.parent.querySelector('div[style]');
-        if (div) s.parent.replaceChild(s.el, div);
-      });
-
-      // Restore textareas
-      savedTA.forEach(function(s) {
-        var div = s.parent.querySelector('div.section-content');
-        if (div) s.parent.replaceChild(s.el, div);
-      });
-
-      // Restore date
-      if (rawDate) { p5.type = 'date'; p5.value = rawDate; }
+      savedDoc.forEach(function(s) { var d = s.parent.querySelector('div[style]'); if (d) s.parent.replaceChild(s.el, d); });
+      savedTA.forEach(function(s)  { var d = s.parent.querySelector('div.section-content'); if (d) s.parent.replaceChild(s.el, d); });
 
       var imgData = canvas.toDataURL('image/jpeg', 0.97);
-      var jsPDF   = window.jspdf.jsPDF;
-      var pdf     = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+      var jsPDF = window.jspdf.jsPDF;
+      var pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
       pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297);
-
       var memberName = (document.getElementById('p1').value || 'Prescription').trim().replace(/\s+/g,'_');
-      var dateStr    = rawDate || new Date().toISOString().slice(0,10);
-      pdf.save('Praan_Rx_' + memberName + '_' + dateStr + '.pdf');
+      pdf.save('Praan_Rx_' + memberName + '_' + rawDate + '.pdf');
 
       btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8M5 7l3 3 3-3"/><path d="M2 12h12"/></svg> Save as PDF';
       btn.disabled = false;
     });
   }
+
+  checkReady();
 </script>
 
 </body>
